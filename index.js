@@ -3,7 +3,18 @@
 class Account {
   constructor(username) {
     this.username = username;
-    this.balance = 0;
+    this.transactions = [];
+  }
+  get balance() {
+    let balance = 0;
+    for (let transaction of this.transactions) {
+      balance += transaction.value;
+    }
+    return balance;
+  }
+
+  addTransaction(transaction) {
+    this.transactions.push(transaction);
   }
 }
 
@@ -12,43 +23,50 @@ class Transaction {
     this.amount = amount;
     this.account = account;
   }
-}
-
-class Deposit extends Transaction {
-  // Update the balance in the account
   commit() {
-    this.account.balance += this.amount;
+    if (this.isAllowed() === true) {
+      this.time = new Date();
+      this.account.addTransaction(this);
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 
 class Withdrawal extends Transaction {
   // Update the balance in the account
-  commit() {
-    this.account.balance -= this.amount;
+
+  get value() {
+    return -this.amount;
+  }
+
+  isAllowed() {
+    return this.account.balance - this.amount >= 0;
+  }
+}
+class Deposit extends Transaction {
+  // Update the balance in the account
+  get value() {
+    return this.amount;
+  }
+
+  isAllowed() {
+    return true;
   }
 }
 
 // DRIVER CODE BELOW
 // We use the code below to "drive" the application logic above and make sure it's working as expected
 
-const myAccount = new Account("snow-patrol");
-t1 = new Withdrawal(50.25, myAccount);
+const myAccount = new Account("billybob");
+
+console.log("Starting Balance:", myAccount.balance);
+
+const t1 = new Deposit(120.0, myAccount);
 t1.commit();
-console.log("Transaction 1:", t1);
-console.log("Balance:", t1.account.balance);
 
-// t1 = new Withdrawal(50.25);
-// t1.commit();
-// console.log("Transaction 1:", t1);
-
-// t2 = new Withdrawal(9.99);
-// t2.commit();
-// console.log("Transaction 2:", t2);
-
-// console.log("Balance:", balance);
-
-// t3 = new Deposit(120.0);
-// t3.commit();
-// console.log("Transaction 3:", t3);
-
-// console.log("Balance:", balance);
+const t2 = new Withdrawal(50.0, myAccount);
+t2.commit();
+console.log("Transactions:", myAccount.transactions);
+console.log("Ending Balance:", myAccount.balance);
